@@ -35,7 +35,7 @@ def norm(s: str) -> str:
     return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9]+", " ", s)).strip()
 
 def toks(s: str) -> set[str]: return {x for x in norm(s).split() if len(x) > 1 and x not in STOP}
-def digit_toks(s: str) -> set[str]: return {x for x in toks(s) if any(c.isdigit() for c in x)}
+def digit_toks(s: str) -> set[str]: return {x for x in norm(s).split() if any(c.isdigit() for c in x)}
 def gtins(o: dict[str, Any]) -> set[str]:
     vals: list[str] = []
     ids = o.get("external_ids") or {}
