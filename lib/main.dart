@@ -1033,7 +1033,7 @@ Future<void> showWishDialog(
                   const TextInputType.numberWithOptions(decimal: true),
               decoration: const InputDecoration(
                 labelText: "Preço-alvo (opcional)",
-                prefixText: "R$ ",
+                prefixText: r"R$ ",
               ),
             ),
           ],
