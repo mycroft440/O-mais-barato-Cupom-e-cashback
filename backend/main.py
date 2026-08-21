@@ -11,10 +11,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="O Mais Barato API",
-    version="0.2.0",
+    version="0.3.0",
     description=(
-        "Busca produtos de catálogo e retorna somente o anúncio mais barato "
-        "entre anúncios equivalentes do mesmo produto."
+        "Busca produtos de catálogo e retorna o menor preço encontrado "
+        "entre anúncios equivalentes do mesmo produto, sem exigir desconto mínimo."
     ),
 )
 
@@ -134,9 +134,10 @@ async def _best_listing_for_product(
 
     listings.sort(key=lambda item: _money(item.get("price")))
     winner = listings[0]
+    winner_price = _money(winner.get("price"))
+
     peer_prices = [_money(item.get("price")) for item in listings[1:]]
     comparison_price = _median(peer_prices)
-    winner_price = _money(winner.get("price"))
     savings = 0.0
     if comparison_price and winner_price < comparison_price:
         savings = round((1 - winner_price / comparison_price) * 100, 2)
@@ -203,6 +204,8 @@ async def _search_marketplace(query: str, limit: int) -> list[dict[str, Any]]:
         compared = await asyncio.gather(*(guarded(product) for product in products))
         results = [item for item in compared if item is not None]
 
+    # O produto mais popular vem primeiro. Dentro de posições equivalentes,
+    # a economia relativa e o menor preço ajudam no desempate.
     results.sort(
         key=lambda item: (
             item["popularity_position"]
@@ -228,7 +231,7 @@ async def search(
     results = await _search_marketplace(q.strip(), limit)
     return {
         "query": q,
-        "comparison_rule": "cheapest_vs_median_of_other_equivalent_listings",
+        "comparison_rule": "lowest_price_per_equivalent_product",
         "results": results,
     }
 
@@ -236,19 +239,12 @@ async def search(
 @app.get("/feed")
 async def feed(
     q: str = Query(default="ofertas", min_length=2, max_length=120),
-    min_savings: float = Query(default=20, ge=0, le=90),
     limit: int = Query(default=12, ge=1, le=20),
 ) -> dict[str, Any]:
     results = await _search_marketplace(q.strip(), 20)
-    filtered = [
-        item
-        for item in results
-        if item["compared_listings"] >= 2
-        and item["savings_vs_peers_percent"] >= min_savings
-    ]
-    filtered.sort(key=lambda item: -item["savings_vs_peers_percent"])
+    comparable = [item for item in results if item["compared_listings"] >= 2]
     return {
         "query": q,
-        "min_savings": min_savings,
-        "results": filtered[:limit],
+        "comparison_rule": "lowest_price_per_equivalent_product_no_minimum_discount",
+        "results": comparable[:limit],
     }
