@@ -69,7 +69,7 @@ void main() {
     expect(winners.first.savingsVsPeersPercent, closeTo(31.03, 0.02));
   });
 
-  test('feed de 20% exclui desconto pequeno entre anúncios', () {
+  test('feed inclui o menor preço mesmo quando diferença é só 5%', () {
     const listings = [
       Product(
         id: 'a',
@@ -77,10 +77,10 @@ void main() {
         category: 'Tecnologia',
         brand: 'Marca',
         marketplace: 'Loja',
-        price: 70,
+        price: 95,
         originalPrice: 100,
         tags: [],
-        catalogProductId: 'a',
+        catalogProductId: 'produto-a',
       ),
       Product(
         id: 'b',
@@ -91,29 +91,41 @@ void main() {
         price: 100,
         originalPrice: 100,
         tags: [],
-        catalogProductId: 'a',
+        catalogProductId: 'produto-a',
       ),
+    ];
+
+    final feed = MarketComparator.dealFeed(listings);
+
+    expect(feed, hasLength(1));
+    expect(feed.first.id, 'a');
+    expect(feed.first.finalPrice, 95);
+    expect(feed.first.savingsVsPeersPercent, closeTo(5, 0.01));
+  });
+
+  test('feed não aplica corte antigo mesmo se parâmetro for informado', () {
+    const listings = [
       Product(
-        id: 'c',
-        name: 'Produto B',
+        id: 'a',
+        name: 'Produto A',
         category: 'Tecnologia',
         brand: 'Marca',
         marketplace: 'Loja',
-        price: 95,
+        price: 98,
         originalPrice: 100,
         tags: [],
-        catalogProductId: 'b',
+        catalogProductId: 'produto-a',
       ),
       Product(
-        id: 'd',
-        name: 'Produto B',
+        id: 'b',
+        name: 'Produto A',
         category: 'Tecnologia',
         brand: 'Marca',
         marketplace: 'Loja',
         price: 100,
         originalPrice: 100,
         tags: [],
-        catalogProductId: 'b',
+        catalogProductId: 'produto-a',
       ),
     ];
 
@@ -122,6 +134,6 @@ void main() {
       minSavingsPercent: 20,
     );
 
-    expect(feed.map((e) => e.catalogProductId), ['a']);
+    expect(feed.map((e) => e.id), ['a']);
   });
 }
