@@ -16,6 +16,8 @@ Para cada produto/modelo, o app deve:
 
 A referência exibida no cartão usa a mediana dos outros anúncios equivalentes para evitar comparações distorcidas por um vendedor excessivamente caro.
 
+Na busca por uma categoria ampla, como **tênis**, a lista deve representar vários modelos populares. Cada modelo aparece uma única vez e o cartão exibido é sempre o anúncio de menor preço encontrado para aquele modelo.
+
 ## Busca real
 
 O backend FastAPI está preparado para usar o catálogo do Mercado Livre como primeira fonte real:
