@@ -1,50 +1,79 @@
 # O Mais Barato — Cupom e Cashback
 
-Aplicativo Flutter para descobrir ofertas, cupons e oportunidades personalizadas, com lista **Quero Comprar** para acompanhar preços e novos cupons.
+Aplicativo Flutter para descobrir ofertas, comparar anúncios equivalentes, encontrar o menor preço, acompanhar produtos desejados e futuramente combinar cupons, cashback e links de afiliado.
 
-## Objetivo
+## Regra principal da comparação
 
-Ser mais eficiente que grupos e canais de cupons no WhatsApp: menos spam, maior relevância individual, comparação de preço final e alertas ligados à intenção real de compra.
+Para cada produto/modelo, o app deve:
+
+1. buscar produtos relacionados à pesquisa;
+2. priorizar os modelos mais populares quando houver dado confiável de popularidade;
+3. agrupar apenas anúncios equivalentes do mesmo produto;
+4. comparar os preços desses anúncios;
+5. exibir somente o anúncio de menor preço de cada produto.
+
+**Não existe desconto mínimo obrigatório.** Se um anúncio custa R$ 95 e o próximo custa R$ 100, o anúncio de R$ 95 continua sendo exibido como o menor preço. O percentual de diferença serve apenas como informação ao usuário.
+
+A referência exibida no cartão usa a mediana dos outros anúncios equivalentes para evitar comparações distorcidas por um vendedor excessivamente caro.
+
+## Busca real
+
+O backend FastAPI está preparado para usar o catálogo do Mercado Livre como primeira fonte real:
+
+- pesquisa de produtos de catálogo;
+- consulta dos anúncios concorrentes vinculados ao mesmo produto;
+- escolha automática do menor preço;
+- posição entre os mais vendidos quando disponível.
+
+O aplicativo consulta o backend quando `API_BASE_URL` é informado em `--dart-define`. Sem backend configurado, usa dados demonstrativos para desenvolvimento.
 
 ## Personalização
 
-O app combina preferências escolhidas pelo usuário com comportamento observado no próprio app. Nesta primeira versão entram:
-
-- Roupas
-- Acessórios
-- Brinquedos
-- Tecnologia
-- Suplementos
-
-Pesquisas têm peso baixo; cliques têm peso maior; produtos salvos em **Quero Comprar** têm peso ainda maior. Esses sinais ordenam o feed e ajudam a recomendar itens similares.
+O app combina preferências escolhidas pelo usuário com comportamento observado no próprio app. Pesquisas, cliques e produtos monitorados alimentam o ranking personalizado sem alterar a regra principal: cada produto continua representado pelo menor preço encontrado.
 
 ## Quero Comprar
 
-O usuário pode salvar um produto por 1, 3, 6 ou 12 meses e definir um preço-alvo opcional. A arquitetura está preparada para disparar alertas quando houver preço menor ou novo cupom aplicável.
+O usuário pode salvar um produto por 1, 3, 6 ou 12 meses e definir um preço-alvo opcional. A arquitetura está preparada para alertar quando aparecer um preço ainda menor ou um novo cupom aplicável.
 
-## Cupons e ofertas
+## Cupons, cashback e afiliados
 
-A interface diferencia cupons verificados de cupons ainda não confirmados. Os dados atuais são demonstrativos; produção deverá usar conectores oficiais/permitidos para marketplaces e programas de afiliados.
+Cupons atuais ainda são demonstrativos. A camada de produção deverá integrar fontes oficiais/permitidas, validar regras e validade, calcular cashback e gerar os links de afiliado no backend, sem expor credenciais no aplicativo Flutter.
+
+## Backend
+
+Para executar localmente:
+
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+export MERCADOLIVRE_ACCESS_TOKEN="seu_token"
+uvicorn main:app --reload
+```
+
+## Flutter
+
+Para apontar o app para o backend:
+
+```bash
+flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000
+```
+
+Em produção, use HTTPS e uma URL pública do backend.
 
 ## GitHub Actions
 
-O workflow `Android CI` executa:
+O workflow `Android CI` executa geração do host Android, `flutter pub get`, análise estática, testes, build do APK release e upload do APK como artifact.
 
-1. geração do host Android;
-2. `flutter pub get`;
-3. `flutter analyze`;
-4. `flutter test`;
-5. `flutter build apk --release`;
-6. upload do APK como artifact do workflow.
+## Próximas camadas
 
-## Próxima camada de produção
-
-- conectores de marketplaces e afiliados;
-- catálogo canônico para identificar o mesmo produto entre lojas;
+- hospedar o backend 24/7;
+- adicionar outras lojas e marketplaces;
+- catálogo canônico entre lojas diferentes;
 - histórico de preços;
-- validação contínua de cupons;
+- cupons reais;
+- cashback;
+- links de afiliado;
 - notificações push;
-- backend para monitoramento 24/7;
-- métricas de relevância, validade e economia real.
-
-> Integrações reais com marketplaces e programas de afiliados exigem credenciais próprias e aprovação nos respectivos programas.
+- métricas de relevância e economia real.
