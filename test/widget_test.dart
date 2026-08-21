@@ -10,7 +10,7 @@ void main() {
     await tester.pumpWidget(const MaisBaratoApp());
     await tester.pumpAndSettle();
 
-    expect(find.text('20%+ mais barato'), findsOneWidget);
+    expect(find.text('Mais baratos agora'), findsOneWidget);
     expect(find.byIcon(Icons.search), findsWidgets);
     expect(find.text('Quero comprar'), findsOneWidget);
   });
